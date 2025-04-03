@@ -1,6 +1,8 @@
 package com.sky.mapper;
 
+import com.sky.annotation.AutoFill;
 import com.sky.entity.Employee;
+import com.sky.enumeration.OperationType;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -22,6 +24,7 @@ public interface EmployeeMapper {
      */
     @Insert("INSERT INTO employee (name, username, password, phone, sex, id_number, create_time, update_time, create_user, update_user) " +
             "VALUES (#{name}, #{username}, #{password}, #{phone}, #{sex}, #{idNumber}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})")
+    @AutoFill(value=OperationType.INSERT)
     void insertEmployee(Employee employee);
 
     /**
