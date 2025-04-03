@@ -46,6 +46,18 @@ public interface EmployeeMapper {
     @Update("UPDATE employee SET name=#{name},username=#{username},phone=#{phone},sex=#{sex},id_number=#{idNumber},update_time=#{updateTime},update_user=#{updateUser} WHERE id=#{id}")
     void updateEmployee(Employee employee);
 
+    /**
+     * 修改员工账号状态
+     * @param status
+     * @param id
+     */
     @Update("UPDATE employee SET status=#{status} WHERE id=#{id}")
     void updateEmployeeStatus(@Param("status") int status,@Param("id") Long id);
+
+    /**
+     * 修改密码
+     * @param employee
+     */
+    @Update("UPDATE employee SET password=#{password} WHERE id=#{id}")
+    void updateEmployeePassword( Employee employee);
 }

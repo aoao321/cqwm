@@ -4,6 +4,7 @@ import com.sky.constant.JwtClaimsConstant;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.properties.JwtProperties;
 import com.sky.result.PageResult;
@@ -107,6 +108,14 @@ public class EmployeeController {
     public Result<String> starOrStop(@PathVariable int status, @Param("id") Long id ) {
         //调用service层启动或者禁用员工账号
         employeeService.starOrStop(status,id);
+        return Result.success();
+    }
+
+    @PutMapping("/editPassword")
+    @ApiOperation("修改员工密码")
+    public Result<String> editPassword(@RequestBody PasswordEditDTO passwordEditDTO) {
+        //修改账号密码
+        employeeService.editPassword(passwordEditDTO);
         return Result.success();
     }
 }
