@@ -6,7 +6,7 @@
         SELECT * FROM employee
             <where>
                 <if test="name !=null">
-                    name like concat('%', #{name}, '%')
+                     name like concat('%', #{name}, '%')
                 </if>
             </where>
     </select>
