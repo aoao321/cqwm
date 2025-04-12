@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -108,7 +109,7 @@ public class DishServiceImpl implements DishService {
 
     @Override
     public void starOrStop(int status, Long id) {
-        //根据id先查询出员工的状态,并设置状态码
+        //根据id先查询出菜品的状态,并设置状态码
         Dish dish = dishMapper.selectById(id);
         if(!dish.getStatus().equals(status)){
             dishMapper.updateStatus(status,id);
@@ -135,12 +136,10 @@ public class DishServiceImpl implements DishService {
         BeanUtils.copyProperties(dishDTO, dish);
         //更新表
         dishMapper.update(dish);
-        System.out.println("----------------------------");
         //先把以前的口味删除在重新插入口味
         List<Long> ids = new ArrayList<>();
         ids.add(dish.getId());
         dishFlavorMapper.deleteByDishIds(ids);
-        System.out.println("----------------------------");
         //获取口味
         List<DishFlavor> flavors = dishDTO.getFlavors();
         if (flavors != null && flavors.size() > 0) {
@@ -154,6 +153,13 @@ public class DishServiceImpl implements DishService {
             dishFlavorMapper.insertBatch(flavors);
         }
 
+    }
+
+    @Override
+    public List<DishVO> list(Long categoryId) {
+        //查询分类
+        List<DishVO> dishVOList = dishMapper.selectByCategoryId(categoryId);
+        return dishVOList;
     }
 
 

@@ -62,7 +62,22 @@ public interface DishMapper {
      * 修改菜品信息
      * @param dish
      */
-
     @AutoFill(value = OperationType.UPDATE)
     void update(Dish dish);
+
+    /**
+     * 查询分类菜品
+     * @param categoryId
+     * @return
+     */
+    @Select("SELECT * FROM dish WHERE category_id=#{categoryId}")
+    List<DishVO> selectByCategoryId(Long categoryId);
+
+    /**
+     * 查询状态
+     * @param dishIds
+     * @return
+     */
+    List<Integer> selectStatusByIds(@Param("ids") List<Long> dishIds);
+
 }

@@ -43,7 +43,14 @@
                     </where>
         ORDER BY d.update_time DESC
     </select>
+
     <select id="selectById" resultType="com.sky.entity.Dish">
         SELECT * FROM dish WHERE id=#{id}
+    </select>
+    <select id="selectStatusByIds" resultType="java.lang.Integer">
+        SELECT status FROM dish WHERE
+            <foreach collection="ids" item="id" separator=" OR ">
+                id=#{id}
+            </foreach>
     </select>
 </mapper>
