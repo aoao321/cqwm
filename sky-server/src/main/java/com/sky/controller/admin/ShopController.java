@@ -14,7 +14,7 @@ import java.util.List;
  * @author aoao
  * @create 2025-04-12-11:30
  */
-@RestController("shopShopController")
+@RestController("adminShopController")
 @RequestMapping("/admin/shop")
 @Slf4j
 @Api(tags = "店铺相关接口")
