@@ -49,7 +49,6 @@ public class AutoFillAspect {
         if(args == null || args.length == 0){
             return;
         }
-
         Object entity = args[0];
 
         //准备赋值的数据

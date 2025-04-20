@@ -3,12 +3,14 @@ package com.sky;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableTransactionManagement //开启注解方式的事务管理
-@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy//开启aop
+@EnableCaching//开启注释缓存
 @Slf4j
 public class SkyApplication {
     public static void main(String[] args) {
