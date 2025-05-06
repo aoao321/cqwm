@@ -6,9 +6,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.BaseException;
@@ -19,6 +17,7 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -83,10 +84,16 @@ public class OrderServiceImpl implements OrderService {
         //设置支付状态 0未支付
         order.setPayStatus(Orders.UN_PAID);
         //设置下单时间
-        order.setOrderTime(LocalDateTime.now());
+        // 获取当前时间
+        LocalDateTime currentTime = LocalDateTime.now();
+        order.setOrderTime(currentTime);
         //设置用户手机号和名字
         order.setPhone(addressBook.getPhone());
         order.setUserName(addressBook.getConsignee());
+        //设置地址和收货人
+        String actuallyAddress = addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail();
+        order.setAddress(actuallyAddress);
+        order.setConsignee(addressBook.getConsignee());
         //向订单表插入一条订单数据
         orderMapper.insert(order);
         //遍历购物车
@@ -108,6 +115,7 @@ public class OrderServiceImpl implements OrderService {
         }
         //向明细表中插入n条数据
         orderDetailMapper.insertBatch(orderDetails);
+
         //清空当前用户购物车所有的商品
         shoppingCartMapper.deleteAll(userId);
         //获取订单id
@@ -129,6 +137,11 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
+
+        //SELECT * FROM sky_take_out.orders;
+        //update orders set pay_status =1 where id =7
+        //update orders set status=2 where id =7
+
         // 当前登录用户id
         Long userId = BaseContext.getCurrentId();
         User user = userMapper.getById(userId);
@@ -243,36 +256,139 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancel(Long id) {
-        //订单状态为 1待付款 2待接单 可以执行取消订单 6已取消
+        // 订单状态为 1待付款 2待接单 可以执行取消订单 6已取消
         Orders orders = orderMapper.selectByOrderId(id);
-        if (orders == null){
+        if (orders == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
         Integer status = orders.getStatus();
-        if (status == Orders.PENDING_PAYMENT ){
-            //修改订单状态为已取消
-            orders.setStatus(Orders.CANCELLED);
-            //订单取消时间
-            orders.setCancelTime(LocalDateTime.now());
-            //订单取消原因
-            orders.setCancelReason("用户取消");
-            orderMapper.update(orders);
+        if (status == Orders.PENDING_PAYMENT) {
+            cancelOrder(orders, "用户取消", null);
         } else if (status == Orders.TO_BE_CONFIRMED) {
-            //修改订单状态为已取消
-            orders.setStatus(Orders.CANCELLED);
-            //订单取消时间
-            orders.setCancelTime(LocalDateTime.now());
-            //订单取消原因
-            orders.setCancelReason("用户取消");
-            //直接退款，无需商家审核
-            //weChatPayUtil.refund();
-            orders.setPayStatus(Orders.REFUND);
-            orderMapper.update(orders);
-        }else {
+            cancelOrder(orders, "用户取消", Orders.REFUND);
+            // 直接退款，无需商家审核
+            // weChatPayUtil.refund();
+        } else {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
-
     }
 
+    private void cancelOrder(Orders orders,String cancelReason, Integer payStatus) {
+        // 修改订单状态为已取消
+        orders.setStatus(Orders.CANCELLED);
+        // 订单取消时间
+        orders.setCancelTime(LocalDateTime.now());
+        // 订单取消原因
+        orders.setCancelReason(cancelReason);
+        if (payStatus != null) {
+            orders.setPayStatus(payStatus);
+        }
+        orderMapper.update(orders);
+    }
+
+    @Override
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        //分页
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        //查询
+        Page<Orders> orders = orderMapper.pageQuery(ordersPageQueryDTO);
+        //获取分页后的信息
+        List<OrderVO> list = new ArrayList();
+        //遍历orders
+        if (orders != null && orders.getTotal() > 0) {
+            for (Orders order : orders) {
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(order, orderVO);
+                orderVO.setOrderDishes("666");
+                list.add(orderVO);
+            }
+        }
+        return new PageResult(orders.getTotal(), list);
+    }
+
+    @Override
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        Orders orders = orderMapper.selectByOrderId(ordersRejectionDTO.getId());
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if(orders.getStatus() == Orders.TO_BE_CONFIRMED) {
+            Long id = orders.getId();
+            String rejectionReason = ordersRejectionDTO.getRejectionReason();
+            Integer status = Orders.CANCELLED;
+            orderMapper.updateOrderCancelInfoByNumber(id, rejectionReason, status);
+
+            //退款
+            //refund()
+        }
+    }
+
+    @Override
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        updateStatus(ordersConfirmDTO.getId(),Orders.TO_BE_CONFIRMED,Orders.CONFIRMED);
+    }
+
+    @Override
+    public void delivery(Long id) {
+       updateStatus(id,Orders.CONFIRMED,Orders.DELIVERY_IN_PROGRESS);
+    }
+
+    @Override
+    public void complete(Long id) {
+        updateStatus(id,Orders.DELIVERY_IN_PROGRESS,Orders.COMPLETED);
+    }
+
+    @Override
+    public void adminCancel(OrdersCancelDTO ordersCancelDTO) {
+        Orders orders = orderMapper.selectByOrderId(ordersCancelDTO.getId());
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if(orders.getStatus() == Orders.CONFIRMED) {
+            orders.setCancelReason(ordersCancelDTO.getCancelReason());
+            orders.setCancelTime(LocalDateTime.now());
+            orders.setStatus(Orders.CANCELLED);
+            orderMapper.update(orders);
+            //refund()
+        }
+    }
+
+    @Override
+    public OrderStatisticsVO statistics() {
+        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
+        List<Map<String, Object>> mapList = orderMapper.countByStatus();
+        if (mapList != null) {
+                for (Map<String, Object> map : mapList) {
+                    Long status = (Long) map.get("status");// 获取状态值
+                    Long count = (Long) map.get("count_status");// 获取统计值
+                    switch (status.intValue()) {
+                        case 2:
+                            orderStatisticsVO.setToBeConfirmed(count);
+                            break;
+                        case 3:
+                            orderStatisticsVO.setConfirmed(count);
+                            break;
+                        case 4:
+                            orderStatisticsVO.setDeliveryInProgress(count);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+        }
+        return orderStatisticsVO;
+    }
+
+    private void updateStatus(Long id,Integer preStatus,Integer endStatus) {
+        Orders orders = orderMapper.selectByOrderId(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+            Integer status = orders.getStatus();
+            if (status == preStatus) {
+                orders.setStatus(endStatus);
+                orderMapper.update(orders);
+            }
+    }
 
 }

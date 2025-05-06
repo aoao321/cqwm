@@ -3,10 +3,10 @@ package com.sky.mapper;
 import com.github.pagehelper.Page;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author aoao
@@ -43,5 +43,18 @@ public interface OrderMapper {
     @Select("SELECT * FROM orders WHERE id=#{id}")
     Orders selectByOrderId(Long id);
 
+    /**
+     * 根据订单号设置取消订单原因
+     * @param number
+     * @param cancelReason
+     */
+    @Update("UPDATE orders SET cancel_reason=#{reason},rejection_reason=#{reason},status=#{status} WHERE id=#{number}")
+    void updateOrderCancelInfoByNumber(@Param("number") Long number,@Param("reason") String cancelReason,@Param("status") Integer status);
 
+    /**
+     * 统计待接单、待派送、派送中的订单数量
+     * @return
+     */
+    @MapKey("status")
+    List<Map<String, Object>> countByStatus();
 }
