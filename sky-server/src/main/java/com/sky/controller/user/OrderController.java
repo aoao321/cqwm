@@ -46,7 +46,8 @@ public class OrderController {
     public Result<OrderPaymentVO> payment(@RequestBody OrdersPaymentDTO ordersPaymentDTO) throws Exception {
         log.info("订单支付：{}", ordersPaymentDTO);
         OrderPaymentVO orderPaymentVO = orderService.payment(ordersPaymentDTO);
-        log.info("生成预支付交易单：{}", orderPaymentVO);
+        //log.info("生成预支付交易单：{}", orderPaymentVO);
+        orderService.paySuccess(ordersPaymentDTO.getOrderNumber());
         return Result.success(orderPaymentVO);
     }
 
@@ -78,6 +79,14 @@ public class OrderController {
     public Result cancel(@PathVariable Long id) {
         log.info("取消订单id:{}",id);
         orderService.cancel(id);
+        return Result.success();
+    }
+
+    @GetMapping("/reminder/{id}")
+    @ApiOperation("用户催单")
+    public Result reminder(@PathVariable Long id) {
+        log.info("用户催单:{}",id);
+        orderService.reminder(id);
         return Result.success();
     }
 
