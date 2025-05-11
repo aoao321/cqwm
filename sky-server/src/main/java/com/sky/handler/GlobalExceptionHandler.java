@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.EOFException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 /**
@@ -39,4 +40,8 @@ public class GlobalExceptionHandler {
         return Result.error(MessageConstant.UNKNOWN_ERROR);
     }
 
+    @ExceptionHandler
+    public Result exceptionHandler(EOFException ex){
+        return Result.error(ex.getMessage());
+    }
 }

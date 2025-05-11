@@ -7,7 +7,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author aoao
@@ -29,4 +31,12 @@ public interface OrderDetailMapper {
     @Select("select * from order_detail where order_id = #{orderId}")
     List<OrderDetail> getByOrderId(Long orderId);
 
+
+    /**
+     * 查询销量前10
+     * @param begin
+     * @param end
+     * @return
+     */
+    List<Map<String, Object>> selectTop10(@Param("begin") LocalDate begin,@Param("end") LocalDate end);
 }

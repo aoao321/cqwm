@@ -128,6 +128,21 @@
         GROUP BY
             ts.status;
     </select>
+    <select id="countTurnoverByDate" resultType="java.lang.Long">
+        <foreach collection="dateList" item="date" separator="UNION ALL">
+            SELECT COUNT(*) FROM orders
+                WHERE DATE_FORMAT(order_time, '%Y-%m-%d') = #{date}
+                    AND status = 5
+        </foreach>
+
+    </select>
+    <select id="countByDate" resultType="java.lang.Long">
+        <foreach collection="dateList" item="date" separator="UNION ALL">
+            SELECT COUNT(*) FROM orders
+            WHERE DATE_FORMAT(order_time, '%Y-%m-%d') = #{date}
+        </foreach>
+    </select>
+
 
 
 </mapper>

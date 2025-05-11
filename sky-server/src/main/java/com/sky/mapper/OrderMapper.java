@@ -5,6 +5,7 @@ import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public interface OrderMapper {
      * 统计待接单、待派送、派送中的订单数量
      * @return
      */
-    @MapKey("status")
+    //@MapKey("status")
     List<Map<String, Object>> countByStatus();
 
     /**
@@ -66,4 +67,20 @@ public interface OrderMapper {
      */
     @Select("SELECT * FROM orders WHERE status=#{status} AND order_time < #{time}")
     List<Orders> getByStatusAndOrderTimeLT(@Param("status") Integer status,@Param("time") LocalDateTime time);
+
+    /**
+     * 根据日期统计营业额
+     * @param dateList
+     * @return
+     */
+    List<Long> countTurnoverByDate(@Param("dateList") List<String> dateList);
+
+    /**
+     * 统计订单总数
+     * @param dateList
+     * @return
+     */
+    List<Long> countByDate(@Param("dateList") List<String> dateList);
+
+
 }

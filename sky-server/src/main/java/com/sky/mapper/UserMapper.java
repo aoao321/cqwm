@@ -2,8 +2,11 @@ package com.sky.mapper;
 
 import com.sky.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.xmlbeans.impl.xb.xmlconfig.Extensionconfig;
+
+import java.util.List;
 
 /**
  * @author aoao
@@ -25,6 +28,25 @@ public interface UserMapper {
      */
     void insert(User user);
 
+    /**
+     * userId查询
+     * @param userId
+     * @return
+     */
     @Select("SELECT * FROM user WHERE id=#{userId}")
     User getById(Long userId);
+
+    /**
+     * 统计日期内的用户数量
+     * @param dateList
+     * @return
+     */
+    List<Long> countByDate(@Param("dateList") List<String> dateList);
+
+    /**
+     * 统计每天新增用户
+     * @param dateList
+     * @return
+     */
+    List<Long> countNewByDate(@Param("dateList") List<String> dateList);
 }

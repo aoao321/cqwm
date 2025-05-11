@@ -8,4 +8,20 @@
         INSERT INTO user (openid,name,phone,sex,id_number,avatar,create_time)
             VALUES (#{openid},#{name},#{phone},#{sex},#{idNumber},#{avatar},#{createTime})
     </insert>
+    <select id="countByDate" resultType="java.lang.Long">
+            <foreach collection="dateList" item="date" separator="UNION ALL">
+                SELECT COUNT(*) FROM user
+                WHERE DATE_FORMAT(create_time, '%Y-%m-%d') &lt; #{date}
+
+            </foreach>
+
+
+    </select>
+    <select id="countNewByDate" resultType="java.lang.Long">
+        <foreach collection="dateList" item="date" separator="UNION ALL">
+            SELECT COUNT(*) FROM user
+            WHERE DATE_FORMAT(create_time, '%Y-%m-%d') = #{date}
+
+        </foreach>
+    </select>
 </mapper>
